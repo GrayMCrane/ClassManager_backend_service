@@ -10,7 +10,7 @@ ORM模型类 - 学科
 from sqlalchemy.schema import Column
 from sqlalchemy.types import Boolean, Integer, String
 
-from app.db.base_class import Base
+from app.models.base import Base
 
 
 class Subject(Base):
@@ -23,3 +23,5 @@ class Subject(Base):
     )
     name = Column(String(20), nullable=True, unique=True, comment='学科名')
     is_delete = Column(Boolean, default=False, nullable=False, comment='是否删除')
+    
+    __no_update_time__ = True
