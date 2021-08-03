@@ -130,3 +130,9 @@ dmypy.json
 
 # IDE
 .idea
+
+# Backup file
+*.bak
+
+# Local file
+local_env.py

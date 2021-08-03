@@ -10,7 +10,7 @@ ORM模型类 - 用户反馈
 from sqlalchemy.schema import Column
 from sqlalchemy.types import BigInteger, Integer, Text
 
-from app.db.base_class import Base
+from app.models.base import Base
 
 
 class Feedback(Base):
@@ -24,6 +24,7 @@ class Feedback(Base):
     desc = Column(Text, nullable=False, comment='反馈内容描述')
 
     __idx_list__ = ('user_id', )
+    __no_update_time__ = True
 
 
 class FeedbackImage(Base):
@@ -39,3 +40,4 @@ class FeedbackImage(Base):
     base64 = Column(Text, nullable=False, comment='图片base64数据')
 
     __idx_list__ = ('feedback_id', )
+    __no_update_time__ = True

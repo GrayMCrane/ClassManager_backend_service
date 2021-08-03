@@ -10,7 +10,7 @@ ORM模型类 - 作业相关
 from sqlalchemy.schema import Column
 from sqlalchemy.types import BigInteger, Boolean, String, Text, TIMESTAMP
 
-from app.db.base_class import Base
+from app.models.base import Base
 
 
 class Homework(Base):

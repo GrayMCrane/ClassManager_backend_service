@@ -2,10 +2,11 @@ import secrets
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, validator
+from app import local_env  # noqa
 
 
 class Settings(BaseSettings):
-    API_V1_STR: str = "/api/v1"
+    CLASS_MANAGER_STR: str = "/class_manager"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
@@ -82,8 +83,24 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str
     USERS_OPEN_REGISTRATION: bool = False
 
+    API_GW_ACCESS_KEY_ID: str
+    API_GW_ACCESS_KEY_SECRET: str
+    API_GW_APP_KEY: str
+    API_GW_APP_SECRET: str
+    SYNC_SCHOOL_API_ID: str
+    SYNC_SCHOOL_PAGE_SIZE: int
+    SYNC_SCHOOL_URL: AnyHttpUrl
+
+    MINI_PROGRAM_APP_ID: str
+    MINI_PROGRAM_APP_SECRET: str
+    CODE2SESSION_URL: HttpUrl
+
     class Config:
         case_sensitive = True
 
 
 settings = Settings()
+
+
+if __name__ == '__main__':
+    print(settings)

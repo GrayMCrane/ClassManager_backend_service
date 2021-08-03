@@ -10,7 +10,7 @@ ORM模型类 - 页面相关
 from sqlalchemy.schema import Column
 from sqlalchemy.types import Integer, String
 
-from app.db.base_class import Base
+from app.models.base import Base
 
 
 class HomepageMenu(Base):

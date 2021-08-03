@@ -8,9 +8,9 @@ ORM模型类 - 用户
 """
 
 from sqlalchemy.schema import Column
-from sqlalchemy.types import BigInteger, Boolean, String, TIMESTAMP
+from sqlalchemy.types import BigInteger, Boolean, String
 
-from app.db.base_class import Base
+from app.models.base import Base
 
 
 class User(Base):
@@ -26,8 +26,6 @@ class User(Base):
     openid = Column(String, nullable=False, unique=True, comment='用户openid')
     telephone = Column(String(11), comment='电话号码')
     current_class_id = Column(BigInteger, comment='当前班级id')
-    create_time = Column(TIMESTAMP, nullable=False, comment='创建时间')
-    update_time = Column(TIMESTAMP, comment='最后修改时间')
     is_delete = Column(Boolean, default=False, nullable=False, comment='是否删除')
 
     __idx_list__ = ('openid', 'wx_name')

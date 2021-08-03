@@ -10,7 +10,7 @@ ORM模型类 - 班级相关
 from sqlalchemy.schema import Column
 from sqlalchemy.types import BigInteger, Boolean, Integer, String, TIMESTAMP
 
-from app.db.base_class import Base
+from app.models.base import Base
 
 
 class Class(Base):
@@ -25,8 +25,6 @@ class Class(Base):
     grade = Column(Integer, comment='年级')
     _class = Column('class', Integer, comment='班级')
     need_audit = Column(Boolean, default=True, nullable=False, comment='加入班级是否需要审核')  # noqa
-    created_time = Column(TIMESTAMP, nullable=False, comment='创建时间')
-    updated_time = Column(TIMESTAMP, comment='最后修改时间')
     is_delete = Column(Boolean, default=False, nullable=False, comment='是否删除')
 
     __idx_list__ = ('school_id', )
@@ -45,14 +43,12 @@ class ClassMember(Base):
     user_id = Column(BigInteger, comment='用户id')
     name = Column(String, nullable=False, comment='教师/学生姓名')
     member_role = Column(String(3), nullable=False,
-                         comment='成员身份: 1-班主任 2-任课老师 3-学生 4-学生亲属')
+                         comment='成员身份: 1-班主任 2-任课老师 3-学生')
     subject = Column(Integer, comment='任教科目id')
     family_relation = Column(String(3), comment='亲属关系id: '
                                                 '1-本人 2-爸爸 3-妈妈 4-爷爷 5-奶奶 '
                                                 '6-外公 7-外婆 8-哥哥 9-姐姐')
     telephone = Column(String(11), nullable=False, comment='电话号码')
-    create_time = Column(TIMESTAMP, nullable=False, comment='创建时间')
-    update_time = Column(TIMESTAMP, comment='最后修改时间')
     is_delete = Column(Boolean, default=False, nullable=False, comment='是否删除')
 
     __idx_list__ = ('class_id', 'user_id', 'name')
@@ -74,13 +70,14 @@ class Apply4Class(Base):
     result = Column(
         String(2), nullable=False, default=1, comment='审核结果: 0-驳回 1-待审核 2-通过'
     )
-    start_time = Column(TIMESTAMP, nullable=False, comment='发起时间')
     end_time = Column(TIMESTAMP, comment='结束时间')
 
     __idx_list__ = ('proposer_id', 'class_id')
+    __no_update_time__ = True
 
 
-class Group(Base):
+class Group:
     """
     班级小组
     """
+    ...
