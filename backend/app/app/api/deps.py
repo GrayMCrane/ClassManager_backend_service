@@ -7,55 +7,56 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
+from app.constants import RespError
 from app.core import security
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.exceptions import BizHTTPException
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+    tokenUrl=f"{settings.CLASS_MANAGER_STR}/access_tokens"
 )
 
 
 def get_db() -> Generator:
+    """
+    获取数据库连接，支持协程异步
+    """
+    db = None
     try:
         db = SessionLocal()
         yield db
     finally:
-        db.close()
+        db.close() if db else ...
 
 
-def get_current_user(
+def get_token(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
-) -> models.User:
+) -> schemas.TokenPayload:
+    """
+    校验Token，校验Token用户存在数据库中，返回Token payload
+    """
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.SECRET_KEY,
+            algorithms=[security.ALGORITHM], audience='ClassManager'
         )
         token_data = schemas.TokenPayload(**payload)
     except (jwt.JWTError, ValidationError):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Could not validate credentials",
-        )
-    user = crud.user.get(db, id=token_data.sub)
+        raise BizHTTPException(*RespError.INVALID_TOKEN)
+    user = crud.user.get(db, id_=token_data.sub)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+        raise BizHTTPException(*RespError.USER_NOT_FOUND)
+    token_data.user = user
+    return token_data
 
 
-def get_current_active_user(
-    current_user: models.User = Depends(get_current_user),
-) -> models.User:
-    if not crud.user.is_active(current_user):
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
-def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
-) -> models.User:
-    if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
-    return current_user
+def get_activated(
+    token: schemas.TokenPayload = Depends(get_token)
+) -> schemas.TokenPayload:
+    """
+    校验Token用户是否停用，返回Token payload
+    """
+    if token.user.is_delete:
+        raise BizHTTPException(*RespError.USER_DISABLED)
+    return token

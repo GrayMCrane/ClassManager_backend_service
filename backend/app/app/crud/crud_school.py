@@ -15,6 +15,6 @@ class CRUDSchool(CRUDBase[School, School, School]):
     """
     全国地区配置相关CRUD
     模型类: School
-    数据表: School
+    数据表: school
     """
     ...

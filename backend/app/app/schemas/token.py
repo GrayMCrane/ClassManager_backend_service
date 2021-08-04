@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -9,4 +9,9 @@ class Token(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    sub: Optional[int] = None
+    iss: str
+    aud: str
+    sub: str
+    flag: str
+    sub_sign: str
+    user: Any = None

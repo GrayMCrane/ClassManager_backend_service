@@ -1,6 +1,7 @@
-from .crud_item import item
-from .crud_user import user
+from .crud_class import class_
+from .crud_page import homepage_menu, slideshow
 from .crud_sys import region, sys_config
+from .crud_user import user
 
 # For a new basic set of CRUD operations you could just do
 
