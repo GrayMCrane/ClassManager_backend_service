@@ -1,10 +1,15 @@
 import random
 import string
-from typing import Dict
 
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+
+
+# CODE = input('please input code to start the test:')
+CODE = '001VXw1w3ewbRW29Zw1w3Ekpgf1VXw1C'  # TODO: 在此输入微信code
+
+TOKEN = None
 
 
 def random_lower_string() -> str:
@@ -15,13 +20,14 @@ def random_email() -> str:
     return f"{random_lower_string()}@{random_lower_string()}.com"
 
 
-def get_superuser_token_headers(client: TestClient) -> Dict[str, str]:
-    login_data = {
-        "username": settings.FIRST_SUPERUSER,
-        "password": settings.FIRST_SUPERUSER_PASSWORD,
-    }
-    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
-    tokens = r.json()
-    a_token = tokens["access_token"]
-    headers = {"Authorization": f"Bearer {a_token}"}
-    return headers
+def get_access_token(client: TestClient) -> str:
+    global TOKEN
+    if TOKEN:
+        return TOKEN
+    resp = client.get(f'{settings.CLASS_MANAGER_STR}/access_tokens/{CODE}')
+    tokens = resp.json()
+    assert resp.status_code == 200
+    assert 'access_token' in tokens
+    assert tokens['access_token']
+    TOKEN = tokens['access_token']
+    return TOKEN
