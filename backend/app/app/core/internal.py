@@ -22,7 +22,7 @@ from app.constants import DBConst
 from app.core.config import settings
 from app.crud import region, sys_config
 from app.models import School
-from app.schemas.sync_school import RespContent, SyncSchool
+from app.schemas.sync_school import SyncSchoolRespContent, SyncSchool
 
 
 DISABLED_SCHOOL = 0  # 已停用，软删除标识
@@ -105,7 +105,7 @@ class APIGateway(object):
         """
         # 结构化响应数据
         resp_content = json.loads(resp.text)
-        content = RespContent(**resp_content)
+        content = SyncSchoolRespContent(**resp_content)
         total_page: int = content.data.totalPage
         school_list: List[SyncSchool] = content.data.list
 

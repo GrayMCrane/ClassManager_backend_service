@@ -13,7 +13,7 @@ from sqlalchemy.orm import aliased, Session
 
 from app.crud.base import CRUDBase
 from app.constants import DBConst
-from app.models.system import Region, SysConfig
+from app.models import Region, SysConfig
 
 
 class CRUDRegion(CRUDBase[Region, Region, Region]):

@@ -1,4 +1,7 @@
-from .item import Item, ItemCreate, ItemInDB, ItemUpdate
-from .msg import Msg
+"""
+Schema - 结构体模型类 / 实体类
+"""
+
+from .msg import Code2SessionMsg, Msg
 from .token import Token, TokenPayload
-from .user import User, UserCreate, UserInDB, UserUpdate
+from .user import UserCreate
