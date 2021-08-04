@@ -24,8 +24,7 @@ class HomepageMenu(Base):
     target = Column(String, nullable=False, comment='资源路径')
     title = Column(String, nullable=False, comment='标题')
     icon = Column(String, nullable=False, comment='图标URL')
-    status = Column(String(2), nullable=False, comment='状态')
-    # TODO: 激活状态，版本，是否删除？
+    status = Column(String(2), nullable=False, default='1', comment='状态: 0-停用 1-启用')  # noqa
 
 
 class Slideshow(Base):
@@ -39,5 +38,4 @@ class Slideshow(Base):
     target = Column(String, comment='页面路由')
     herf = Column(String, comment='跳转外链')
     name = Column(String, comment='名字')
-    status = Column(String(2), nullable=False, comment='状态')
-    # TODO: 激活状态，版本，是否删除？
+    status = Column(String(2), nullable=False, default='1', comment='状态: 0-停用 1-启用')  # noqa
