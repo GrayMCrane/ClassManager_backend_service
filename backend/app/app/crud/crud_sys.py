@@ -22,7 +22,6 @@ class CRUDRegion(CRUDBase[Region, Region, Region]):
     模型类: Region
     数据表: region
     """
-
     @staticmethod
     def get_area_tree(db: Session) -> List[Tuple]:
         """

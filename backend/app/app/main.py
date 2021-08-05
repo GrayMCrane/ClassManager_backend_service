@@ -3,11 +3,13 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import HTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.class_manager.api import api_router
 from app.core.config import settings
-from app.exceptions import http_exception_handler
+from app.core.middleware import log_requests
+from app.exceptions import broad_exception_handler, http_exception_handler
 
 
 # 保存项目根路径到配置对象
@@ -43,6 +45,9 @@ STATIC_PATH = os.path.join(settings.BASE_DIR, 'static')
 app.mount('/files', StaticFiles(directory=STATIC_PATH), name='static')
 # 注册自定义异常处理函数
 app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(Exception, broad_exception_handler)
+# 注册中间件
+app.add_middleware(BaseHTTPMiddleware, dispatch=log_requests)
 
 
 if __name__ == '__main__':

@@ -9,10 +9,17 @@
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
+from loguru import logger
 
 
-async def http_exception_handler(_: Request,
-                                 exc: HTTPException) -> JSONResponse:
+async def http_exception_handler(
+    _: Request, exc: HTTPException
+) -> JSONResponse:
+    """
+    统一处理 HTTPException 异常
+    返回异常响应并记录错误栈日志
+    """
+    logger.exception('An http exception occurred')
     headers = getattr(exc, "headers", None)
     desc = getattr(exc, 'desc', None)
     content = {'detail': exc.detail}

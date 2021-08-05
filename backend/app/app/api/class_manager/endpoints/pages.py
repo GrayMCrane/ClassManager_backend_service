@@ -10,13 +10,10 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
 from app.api import deps
-from app.constants import RespError
-from app.exceptions import BizHTTPException
 
 
 router = APIRouter()
@@ -33,14 +30,10 @@ def get_slideshows(
     """
     获取启用中的轮播图，图片数量有限制
     """
-    try:
-        if not limit or limit <= 0 or limit > SLIDESHOW_NUMBER_LIMIT:
-            limit = SLIDESHOW_NUMBER_LIMIT
-        slideshows = crud.slideshow.get_activated(db, limit=limit)
-        return slideshows
-    except Exception:
-        logger.exception(f'Failed to get slideshow')
-        raise BizHTTPException(*RespError.INTERNAL_SERVER_ERROR)
+    if not limit or limit <= 0 or limit > SLIDESHOW_NUMBER_LIMIT:
+        limit = SLIDESHOW_NUMBER_LIMIT
+    slideshows = crud.slideshow.get_activated(db, limit=limit)
+    return slideshows
 
 
 @router.get('/homepage_menus')
@@ -52,11 +45,7 @@ def get_homepage_menus(
     """
     获取首页菜单，有数量限制
     """
-    try:
-        if not limit or limit <= 0 or limit > HOMEPAGE_MENU_NUMBER_LIMIT:
-            limit = HOMEPAGE_MENU_NUMBER_LIMIT
-        homepage_menus = crud.homepage_menu.get_activated(db, limit)
-        return homepage_menus
-    except Exception:
-        logger.exception(f'Failed to get homepage menu')
-        raise BizHTTPException(*RespError.INTERNAL_SERVER_ERROR)
+    if not limit or limit <= 0 or limit > HOMEPAGE_MENU_NUMBER_LIMIT:
+        limit = HOMEPAGE_MENU_NUMBER_LIMIT
+    homepage_menus = crud.homepage_menu.get_activated(db, limit)
+    return homepage_menus
