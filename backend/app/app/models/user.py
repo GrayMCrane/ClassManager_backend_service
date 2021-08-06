@@ -21,7 +21,7 @@ class User(Base):
     id = Column(
         BigInteger, primary_key=True, autoincrement=True, comment='用户id，主键'
     )
-    wx_name = Column(String, nullable=False, comment='微信名称')
+    wx_name = Column(String, comment='微信名称')
     avatar = Column(String, comment='头像URL')
     openid = Column(String, nullable=False, unique=True, comment='用户openid')
     telephone = Column(String(11), comment='电话号码')

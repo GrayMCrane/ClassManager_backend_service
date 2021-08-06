@@ -8,26 +8,23 @@ CRUD模块 - 用户相关 非复杂业务CRUD
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import func
 
 from app.crud.base import CRUDBase
-from app.models.user import User
+from app.models import User
+from app.schemas.user import UserCreate
 
 
-class CRUDUser(CRUDBase[User, User, User]):
+class CRUDUser(CRUDBase[User, UserCreate, User]):
     """
     用户相关，非复杂业务CRUD
     模型类: User
     数据表: user
     """
-    def has_openid(self, db: Session, openid: str):
-        """
-        查询 user 表内是否已存在对应 openid
-        """
+    def get_user_by_openid(self, db: Session, openid: str) -> User:
         return (
-            db.query(func.count(self.model.id))
+            db.query(self.model)
             .filter(User.openid == openid)
-            .scalar()
+            .first()
         )
 
 

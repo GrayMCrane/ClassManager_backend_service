@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, schemas
 from app.core.config import settings
-from app.db import base  # noqa: F401
+from app.models import Base  # noqa
 
 # make sure all SQL Alchemy models are imported (app.db.base) before initializing DB
 # otherwise, SQL Alchemy might fail to initialize relationships properly
@@ -10,6 +10,9 @@ from app.db import base  # noqa: F401
 
 
 def init_db(db: Session) -> None:
+    """
+    检查数据库内是否配置有超级用户，若无，增加超级用户数据
+    """
     # Tables should be created with Alembic migrations
     # But if you don't want to use migrations, create
     # the tables un-commenting the next line

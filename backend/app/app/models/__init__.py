@@ -9,12 +9,11 @@ ORM模型
 如果新增了模型类，请在此处导入新增的模型类，否则自动生成迁移脚本时不会生成对应的表
 """
 
-from app.models.base import Base  # noqa
+from app.models.base import Base                                # noqa
 from app.models.classes import Apply4Class, Class, ClassMember  # noqa
-from app.models.feedback import Feedback, FeedbackImage  # noqa
-from app.models.item import Item  # noqa
-from app.models.page import HomepageMenu  # noqa
-from app.models.school import School  # noqa
-from app.models.subject import Subject  # noqa
-from app.models.system import SysConfig  # noqa
-from app.models.user import User  # noqa
+from app.models.feedback import Feedback, FeedbackImage         # noqa
+from app.models.page import HomepageMenu, Slideshow             # noqa
+from app.models.school import School                            # noqa
+from app.models.subject import Subject                          # noqa
+from app.models.system import Region, SysConfig                 # noqa
+from app.models.user import User                                # noqa
