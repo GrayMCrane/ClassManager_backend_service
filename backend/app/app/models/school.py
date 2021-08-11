@@ -8,6 +8,7 @@ ORM模型类 - 学校
 """
 
 from sqlalchemy.schema import Column
+from sqlalchemy.sql import text
 from sqlalchemy.types import BigInteger, Boolean, Integer, String
 
 from app.models.base import Base
@@ -31,4 +32,6 @@ class School(Base):
     data_source = Column(
         String(2), nullable=False, comment='数据来源: 1-api网关同步 2-小学数字教辅中心创建'
     )
-    is_delete = Column(Boolean, default=False, nullable=False, comment='是否删除')
+    is_delete = Column(
+        Boolean, server_default=text('False'), nullable=False, comment='是否删除'
+    )

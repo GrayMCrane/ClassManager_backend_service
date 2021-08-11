@@ -29,3 +29,8 @@ class DBConst(Const):
     # ------------ 首页菜单 homepage_menu 相关 -----------
     HOMEPAGE_MENU_ACTIVATED = '1'    # 首页菜单项已启用
     HOMEPAGE_MENU_INACTIVATED = '0'  # 首页菜单项已停用
+
+    # ----------- 班级成员表 class_member 相关 -----------
+    HEADTEACHER = '1'  # 班级成员身份: 班主任
+    TEACHER = '2'      # 班级成员身份: 任课老师
+    STUDENT = '3'      # 班级成员身份: 学生

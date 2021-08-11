@@ -17,6 +17,7 @@ from app.constants import DBConst
 def insert_seed_data(op) -> None:
     insert_region(op)
     insert_cp_field_mapping(op)
+    op.execute("select setval('class_id_seq', 1001, false);")
 
 
 # 插入 地区 种子数据

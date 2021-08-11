@@ -30,14 +30,16 @@ class Base:
     # 利用反射自动为字段生成索引
     @declared_attr
     def __table_args__(cls):  # noqa
-        if not hasattr(cls, '__idx_list__'):
-            return None
         table_args = []
-        for field_name in cls.__idx_list__:
-            field = getattr(cls, field_name)
-            index_name = f'{cls.__tablename__}_{field_name}_idx'
-            table_args.append(Index(index_name, field))
-        return tuple(table_args)
+        if hasattr(cls, '__arg_list__'):
+            for arg in cls.__arg_list__:
+                table_args.append(arg)
+        if hasattr(cls, '__idx_list__'):
+            for field_name in cls.__idx_list__:
+                field = getattr(cls, field_name)
+                index_name = f'{cls.__tablename__}_{field_name}_idx'
+                table_args.append(Index(index_name, field))
+        return tuple(table_args) if table_args else None
 
     # 自动生成 创建时间 字段
     @declared_attr
