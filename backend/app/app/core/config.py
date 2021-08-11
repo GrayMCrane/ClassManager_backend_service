@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, \
     validator
-from app import local_env  # noqa
 
 
 class Settings(BaseSettings):
@@ -85,7 +84,6 @@ class Settings(BaseSettings):
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
-    USERS_OPEN_REGISTRATION: bool = False
 
     API_GW_ACCESS_KEY_ID: str
     API_GW_ACCESS_KEY_SECRET: str
@@ -98,6 +96,18 @@ class Settings(BaseSettings):
     MINI_PROGRAM_APP_ID: str
     MINI_PROGRAM_APP_SECRET: str
     CODE2SESSION_URL: HttpUrl
+
+    LOG_LEVEL: str
+
+    @validator('LOG_LEVEL', pre=True)
+    def get_log_level(cls, v: str) -> str:  # noqa
+        v = v.upper()
+        if v not in (
+                'TRACE', 'DEBUG', 'INFO', 'SUCCESS',
+                'WARNING', 'ERROR', 'CRITICAL'
+        ):
+            raise ValueError(f'Invalid log level {v}')
+        return v
 
     class Config:
         case_sensitive = True
