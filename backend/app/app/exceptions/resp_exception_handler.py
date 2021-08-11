@@ -11,15 +11,25 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
+from app.exceptions import BizHTTPException
+
 
 async def http_exception_handler(
-    _: Request, exc: HTTPException
+    request: Request, exc: HTTPException
 ) -> JSONResponse:
     """
     统一处理 HTTPException 异常
     返回异常响应并记录错误栈日志
     """
-    logger.exception('An http exception occurred')
+    if isinstance(exc, BizHTTPException):
+        logger.error(f'rid={request.state.request_id} '
+                     f'an http exception occurred: {exc}')
+    else:
+        logger.exception(
+            f'rid={request.state.request_id} '
+            f'headers={request.headers} body={await request.body()} '
+            f'an http exception occurred:'
+        )
     headers = getattr(exc, "headers", None)
     desc = getattr(exc, 'desc', None)
     content = {'detail': exc.detail}

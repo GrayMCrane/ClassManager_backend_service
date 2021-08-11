@@ -38,6 +38,7 @@ CODE2SESSION_ERROR_MAP = {
 
 @router.get('/access_tokens/{code}', response_model=schemas.Token)
 def get_access_token(
+    request_id: str = Depends(deps.get_request_id),
     db: Session = Depends(deps.get_db),
     code: str = Path(...),
 ) -> Dict[str, str]:
@@ -58,8 +59,8 @@ def get_access_token(
     resp = requests.get(settings.CODE2SESSION_URL, params=params)
     resp_msg = Code2SessionMsg(**json.loads(resp.text))
     if not resp_msg.openid or not resp_msg.session_key:
-        logger.error(f'Failed to obtain user openid and session_key by '
-                     f'code2session API,code: {code},API message: {resp.text}')
+        logger.error(f'rid={request_id} code to session failed,'
+                     f'status code={resp.status_code} message={resp.text}')
         error = CODE2SESSION_ERROR_MAP.get(resp_msg.errcode,
                                            RespError.AUTHENTICATE_FAILED)
         raise BizHTTPException(*error)

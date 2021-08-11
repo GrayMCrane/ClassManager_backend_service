@@ -10,6 +10,7 @@ from app.api.class_manager.api import api_router
 from app.core.config import settings
 from app.core.middleware import log_requests
 from app.exceptions import broad_exception_handler, http_exception_handler
+from app.utils import init_logger
 
 
 # 保存项目根路径到配置对象
@@ -32,6 +33,7 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 
+# 初始化静态文件目录
 @app.on_event('startup')
 def startup_event():
     os.mkdir('static') if not os.path.exists('static') else ...
@@ -48,8 +50,10 @@ app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, broad_exception_handler)
 # 注册中间件
 app.add_middleware(BaseHTTPMiddleware, dispatch=log_requests)
+# 初始化日志
+init_logger()
 
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run('main:app', reload=True)  # local test
+    uvicorn.run('main:app', host='0.0.0.0', reload=True)  # local test

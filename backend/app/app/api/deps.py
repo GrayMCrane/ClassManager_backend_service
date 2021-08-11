@@ -1,6 +1,6 @@
 from typing import Generator
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
@@ -16,6 +16,13 @@ from app.exceptions import BizHTTPException
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.CLASS_MANAGER_STR}/access_tokens"
 )
+
+
+def get_request_id(request: Request) -> str:
+    """
+    从请求中获取 request_id
+    """
+    return request.state.request_id
 
 
 def get_db() -> Generator:
@@ -42,6 +49,8 @@ def get_token(
             algorithms=[security.ALGORITHM], audience='ClassManager'
         )
         token = schemas.TokenPayload(**payload)
+    except jwt.ExpiredSignatureError:
+        raise BizHTTPException(*RespError.TOKEN_EXPIRED)
     except (jwt.JWTError, ValidationError):
         raise BizHTTPException(*RespError.INVALID_TOKEN)
     user = crud.user.get(db, id_=token.sub)
