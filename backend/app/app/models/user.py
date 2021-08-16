@@ -26,7 +26,7 @@ class User(Base):
     avatar = Column(String, comment='头像URL')
     openid = Column(String, nullable=False, unique=True, comment='用户openid')
     telephone = Column(String(11), comment='电话号码')
-    current_class_id = Column(BigInteger, comment='当前班级id')
+    current_member_id = Column(BigInteger, comment='当前班级成员id')
     is_delete = Column(
         Boolean, server_default=text('False'), nullable=False, comment='是否删除'
     )
