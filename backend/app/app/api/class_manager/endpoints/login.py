@@ -36,11 +36,12 @@ CODE2SESSION_ERROR_MAP = {
 }
 
 
-@router.get('/access_tokens/{code}', response_model=schemas.Token)
+@router.get('/access_tokens/{code}', response_model=schemas.Token,
+            summary='获取Token', description='获取Token')
 def get_access_token(
     request_id: str = Depends(deps.get_request_id),
     db: Session = Depends(deps.get_db),
-    code: str = Path(...),
+    code: str = Path(..., description='微信code'),
 ) -> Dict[str, str]:
     """
     签发Token
@@ -66,7 +67,7 @@ def get_access_token(
         raise BizHTTPException(*error)
 
     # 查询该openid的用户是否已在数据库内，若无则新建用户数据
-    user = crud.user.get_user_by_openid(db, resp_msg.openid)
+    user = crud.user.is_openid_exists(db, resp_msg.openid)
     if not user:
         new_user = schemas.UserCreate(openid=resp_msg.openid)
         user = crud.user.create(db, obj_in=new_user)
@@ -81,9 +82,10 @@ def get_access_token(
     # 加密session_key
     sub_sign = security.AESCrypto.encrypt(resp_msg.session_key,
                                           settings.AES_KEY, settings.AES_IV)
-    return {
+    data = {
         'access_token': security.create_access_token(
             user.id, flag, sub_sign, access_token_expires
         ),
         'token_type': 'bearer',
     }
+    return schemas.Response(data=data)

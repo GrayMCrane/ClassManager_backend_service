@@ -2,14 +2,15 @@ import os
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.class_manager.api import api_router
 from app.core.config import settings
 from app.core.middleware import log_requests
-from app.exceptions import broad_exception_handler, http_exception_handler
+from app.exceptions import (
+    BizHTTPException, broad_exception_handler, http_exception_handler
+)
 from app.utils import init_logger
 
 
@@ -19,10 +20,11 @@ settings.BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    description='ClassManager backend service',
     openapi_url=f"{settings.CLASS_MANAGER_STR}/openapi.json"
 )
 
-# Set all CORS enabled origins
+# 跨域配置
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
@@ -46,7 +48,7 @@ app.include_router(api_router, prefix=settings.CLASS_MANAGER_STR)
 STATIC_PATH = os.path.join(settings.BASE_DIR, 'static')
 app.mount('/files', StaticFiles(directory=STATIC_PATH), name='static')
 # 注册自定义异常处理函数
-app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(BizHTTPException, http_exception_handler)
 app.add_exception_handler(Exception, broad_exception_handler)
 # 注册中间件
 app.add_middleware(BaseHTTPMiddleware, dispatch=log_requests)

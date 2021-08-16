@@ -13,8 +13,10 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.exceptions import BizHTTPException
 
+
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.CLASS_MANAGER_STR}/access_tokens"
+    tokenUrl=f"{settings.CLASS_MANAGER_STR}/access_tokens",
+    auto_error=False,
 )
 
 
@@ -43,6 +45,8 @@ def get_token(
     """
     校验Token，校验Token用户存在数据库中，返回Token payload
     """
+    if not token_str:
+        raise BizHTTPException(*RespError.FORBIDDEN)
     try:
         payload = jwt.decode(
             token_str, settings.SECRET_KEY,
@@ -53,7 +57,7 @@ def get_token(
         raise BizHTTPException(*RespError.TOKEN_EXPIRED)
     except (jwt.JWTError, ValidationError):
         raise BizHTTPException(*RespError.INVALID_TOKEN)
-    user = crud.user.get(db, id_=token.sub)
+    user = crud.user.get_basic_info(db, id_=token.sub)
     if not user:
         raise BizHTTPException(*RespError.USER_NOT_FOUND)
     token.user = user
