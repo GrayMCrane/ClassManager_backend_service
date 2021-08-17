@@ -11,7 +11,7 @@ class Token(BaseModel):
 class TokenPayload(BaseModel):
     iss: str
     aud: str
-    sub: str
+    sub: int
     flag: str
     sub_sign: str
     user: Any = None

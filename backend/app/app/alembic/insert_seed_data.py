@@ -17,6 +17,8 @@ from app.constants import DBConst
 def insert_seed_data(op) -> None:
     insert_region(op)
     insert_cp_field_mapping(op)
+    insert_family_relation_config(op)
+    op.execute("select setval('class_id_seq', 1001, false);")
 
 
 # 插入 地区 种子数据
@@ -86,3 +88,65 @@ def insert_cp_field_mapping(op):
         },
     ]
     op.bulk_insert(sys_config_table, school_phase_mapping)
+
+
+# 插入 亲属关系 的配置
+def insert_family_relation_config(op):
+    family_relation_config = [
+        {
+            'key': '1',
+            'value': '本人',
+            'desc': '亲属关系: 本人',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '2',
+            'value': '爸爸',
+            'desc': '亲属关系: 爸爸',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '3',
+            'value': '妈妈',
+            'desc': '亲属关系: 妈妈',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '4',
+            'value': '爷爷',
+            'desc': '亲属关系: 爷爷',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '5',
+            'value': '奶奶',
+            'desc': '亲属关系: 奶奶',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '6',
+            'value': '外公',
+            'desc': '亲属关系: 外公',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '7',
+            'value': '外婆',
+            'desc': '亲属关系: 外婆',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '8',
+            'value': '哥哥',
+            'desc': '亲属关系: 哥哥',
+            'type': DBConst.FAMILY_RELATION,
+        },
+        {
+            'key': '9',
+            'value': '姐姐',
+            'desc': '亲属关系: 姐姐',
+            'type': DBConst.FAMILY_RELATION,
+        },
+    ]
+    op.bulk_insert(sys_config_table, family_relation_config)
+

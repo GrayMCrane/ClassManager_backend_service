@@ -18,3 +18,6 @@ class CRUDSchool(CRUDBase[School, School, School]):
     数据表: school
     """
     ...
+
+
+school = CRUDSchool(School)

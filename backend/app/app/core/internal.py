@@ -15,6 +15,7 @@ from hashlib import md5
 from loguru import logger
 from typing import List, Tuple
 
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -35,8 +36,8 @@ class APIGateway(object):
 
     @staticmethod
     def list_school(
-            page_size: int = settings.SYNC_SCHOOL_PAGE_SIZE,
-            curr_page: int = 1
+        page_size: int = settings.SYNC_SCHOOL_PAGE_SIZE,
+        curr_page: int = 1
     ) -> requests.Response:
         """
         调用一次API网关 列出学校信息 接口，获取一页学校信息，返回响应对象
@@ -97,7 +98,7 @@ class APIGateway(object):
 
     @staticmethod
     def preprocess_resp(
-            resp: requests.Response, sys_area: pd.DataFrame, sys_stage: pd.DataFrame
+        resp: requests.Response, sys_area: pd.DataFrame, sys_stage: pd.DataFrame
     ) -> Tuple[int, List[dict]]:
         """
         预处理 API网关接口返回的响应数据
@@ -151,13 +152,13 @@ class APIGateway(object):
             )
         # 无法识别的学校数据记录日志
         if invalid_list:
-            logger.error(f'Unrecognized school data in synchronization: {invalid_list}\n'
-                         f'raw API message: {resp.text}')
+            logger.error(f'Unrecognized school data in synchronization: '
+                         f'{invalid_list}\nraw API message: {resp.text}')
         return total_page, valid_list
 
     @staticmethod
     def update_school_data(
-            db: Session, school_list: List[dict]
+        db: Session, school_list: List[dict]
     ) -> None:
         """
         更新学校数据到数据库
@@ -165,7 +166,6 @@ class APIGateway(object):
         school_id 字段有唯一索引
         如果 school_id 已存在则更新该条记录的数据，如不存在则插入新记录
         """
-        from sqlalchemy.dialects.postgresql import insert
         batch_upsert = insert(School).values(school_list)
         batch_upsert = batch_upsert.on_conflict_do_update(
             index_elements=[School.school_id],

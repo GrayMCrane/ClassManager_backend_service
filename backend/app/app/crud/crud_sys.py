@@ -10,6 +10,7 @@ CRUD模块 - 系统配置相关 非复杂业务CRUD
 from typing import List, Tuple
 
 from sqlalchemy.orm import aliased, Session
+from sqlalchemy.sql import and_, func
 
 from app.crud.base import CRUDBase
 from app.constants import DBConst
@@ -22,7 +23,6 @@ class CRUDRegion(CRUDBase[Region, Region, Region]):
     模型类: Region
     数据表: region
     """
-
     @staticmethod
     def get_area_tree(db: Session) -> List[Tuple]:
         """
@@ -52,6 +52,21 @@ class CRUDSysConfig(CRUDBase[SysConfig, SysConfig, SysConfig]):
             db.query(SysConfig.key, SysConfig.value)
             .filter(SysConfig.type_ == type_)
             .all()
+        )
+
+    def family_relation_exists(self, db: Session, family_relation: str) -> int:
+        """
+        查询对应 亲属关系 配置是否存在
+        """
+        return (
+            db.query(func.count(self.model.id))
+            .filter(
+                and_(
+                    SysConfig.type_ == DBConst.FAMILY_RELATION,
+                    SysConfig.key == family_relation,
+                )
+            )
+            .scalar()
         )
 
 

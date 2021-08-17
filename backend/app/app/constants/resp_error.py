@@ -19,10 +19,10 @@ class Response(object):
     response = Response(status_code=404, detail='Not found', desc='找不到资源')
     raise BizHTTPException(*response)
     """
-    def __init__(self, status_code: int, detail: str, desc: str) -> None:
+    def __init__(self, status_code: int, statement: str, message: str) -> None:
         super().__setattr__('status_code', status_code)
-        super().__setattr__('detail', detail)
-        super().__setattr__('desc', desc)
+        super().__setattr__('statement', statement)
+        super().__setattr__('message', message)
 
     def __setattr__(self, key, value):
         raise TypeError(f'object is immutable')
@@ -53,3 +53,15 @@ class RespError(Const):
 
     INVALID_PARAMETER = Response(400, 'Invalid parameter', '无效的请求参数')
     MISSING_PARAMETER = Response(400, 'Missing parameter', '缺失必要参数')
+
+    FORBIDDEN = Response(403, 'Not authenticated', '禁止访问')
+
+    DUPLICATE_MEMBER = Response(400, 'User already in class', '用户已在班')
+    DUPLICATE_TEACHER = Response(400, 'Teacher already in class', '已是{}老师')
+    DUPLICATE_APPLY = Response(400, 'Duplicate apply for class', '重复提交的申请')
+    TEACHER_EXISTS = Response(
+        400, 'Subject teacher already in class', '{}任课老师已在班'
+    )
+    TOO_MANY_APPLY = Response(
+        400, 'Too many apply in class', '同一班级申请数量超过上限'
+    )
