@@ -9,8 +9,12 @@ class Settings(BaseSettings):
     BASE_DIR: str = None
     CLASS_MANAGER_STR: str = "/class_manager"
     SECRET_KEY: str = secrets.token_urlsafe(32)
+    # AES加密用 KEY、向量
     AES_KEY: str = "a0210ae37f395d9a0ab95494883fb3ea"
     AES_IV: str = "0bdd880f310f4eaf"
+    # 短信发送 时间间隔、超时时间
+    SEND_SMS_INTERVAL_SECONDS: int = 1 * 60
+    SMS_CAPTCHA_EXPIRE_SECONDS: int = 5 * 60
     # Token有效期 60 * 24 * 7 minutes = 7 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     SERVER_NAME: str
@@ -98,6 +102,10 @@ class Settings(BaseSettings):
     CODE2SESSION_URL: HttpUrl
 
     LOG_LEVEL: str
+    CELERY_BROKER_URL: str
+
+    REDIS_HOST: str
+    REDIS_PORT: int
 
     @validator('LOG_LEVEL', pre=True)
     def get_log_level(cls, v: str) -> str:  # noqa
@@ -108,6 +116,12 @@ class Settings(BaseSettings):
         ):
             raise ValueError(f'Invalid log level {v}')
         return v
+
+    TENCENT_CLOUD_SECRET_ID: str
+    TENCENT_CLOUD_SECRET_KEY: str
+    TENCENT_CLOUD_SMS_SDK_APPID: str
+    TENCENT_CLOUD_SMS_TEMPLATE_ID: str
+    TENCENT_CLOUD_SMS_SIGN: str
 
     class Config:
         case_sensitive = True
