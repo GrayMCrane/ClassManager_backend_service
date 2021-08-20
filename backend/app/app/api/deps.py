@@ -4,6 +4,7 @@ from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
+from redis import Redis
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
@@ -11,6 +12,7 @@ from app.constants import RespError
 from app.core import security
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.db.redis import redis
 from app.exceptions import BizHTTPException
 
 
@@ -39,6 +41,10 @@ def get_db() -> Generator:
         db.close() if db else ...
 
 
+def get_redis() -> Redis:
+    return redis
+
+
 def get_token(
     db: Session = Depends(get_db), token_str: str = Depends(reusable_oauth2)
 ) -> schemas.TokenPayload:
@@ -57,7 +63,7 @@ def get_token(
         raise BizHTTPException(*RespError.TOKEN_EXPIRED)
     except (jwt.JWTError, ValidationError):
         raise BizHTTPException(*RespError.INVALID_TOKEN)
-    user = crud.user.get_basic_info(db, id_=token.sub)
+    user = crud.user.get_basic_info(db, user_id=token.sub)
     if not user:
         raise BizHTTPException(*RespError.USER_NOT_FOUND)
     token.user = user
