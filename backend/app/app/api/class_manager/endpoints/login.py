@@ -31,6 +31,7 @@ router = APIRouter()
 CODE2SESSION_ERROR_MAP = {
     '-1': RespError.SERVER_TOO_BUSY,
     '40029': RespError.INVALID_CODE,
+    '40163': RespError.USED_CODE,
     '45011': RespError.USER_REQUESTS_TOO_FREQUENTLY,
     '40226': RespError.HIGH_RISK_USER,
 }

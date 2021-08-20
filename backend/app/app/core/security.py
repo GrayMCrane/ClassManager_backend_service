@@ -50,7 +50,7 @@ def create_access_token(
         'iss': 'PrimarySchoolDigitalTeachingCenter',
         'aud': 'ClassManager',
         'exp': expire,
-        'sub': subject,
+        'sub': str(subject),
         'flag': flag,
         'sub_sign': sub_sign,
     }
