@@ -24,7 +24,7 @@ class CRUDClass(CRUDBase[Class, Class, Class]):
     """
     def class_exists(
         self, db: Session, class_id: int
-    ) -> Row[Class.id, Class.contact, Class.need_audit]:
+    ) -> Row:
         """
         查询 class_id 对应班级是否存在
         """
@@ -124,7 +124,7 @@ class CRUDClassMember(CRUDBase[ClassMember, ClassMember, ClassMember]):
             db.query(self.model.id, self.model.class_id, self.model.name,
                      self.model.member_role, self.model.subject_id,
                      self.model.family_relation, Class.class_, Class.grade)
-            .join(Class, self.model.classid == Class.id)
+            .join(Class, ClassMember.class_id == Class.id)
             .filter(
                 and_(
                     ClassMember.id == member_id,
@@ -201,7 +201,7 @@ class CRUDApply4Class(CRUDBase[Apply4Class, Apply4Class, Apply4Class]):
 
     def student_apply_exists(
         self, db: Session, user_id: int, class_id: int
-    ) -> List[Row[Apply4Class.name]]:
+    ) -> List[Row]:
         """
         查询 同一用户在同一班级内同一学生名字提交学生入班申请的数量
         """

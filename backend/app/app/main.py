@@ -20,8 +20,9 @@ settings.BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    root_path=settings.BASE_DIR,
     description='ClassManager backend service',
-    openapi_url=f"{settings.CLASS_MANAGER_STR}/openapi.json"
+    openapi_url=f"/api{settings.CLASS_MANAGER_STR}/openapi.json"
 )
 
 # 跨域配置

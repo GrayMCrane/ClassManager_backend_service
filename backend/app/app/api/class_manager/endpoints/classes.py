@@ -10,6 +10,8 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Form, Path, Query
+from fastapi.responses import JSONResponse
+from redis import Redis
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session
 
@@ -25,14 +27,20 @@ router = APIRouter()
 TELEPHONE_REGEX = r'^1[358]\d{9}$|^147\d{8}$|^179\d{8}$'
 
 
-def validate_verify_code(
-    verify_code: int = Form(..., description='验证码')
+def validate_sms_captcha(
+    captcha: int = Form(..., description='验证码'),
+    redis: Redis = Depends(deps.get_redis),
+    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
 ) -> int:
     """
-    校验验证码
+    校验短信验证码
     """
-    # TODO
-    return verify_code
+    key_name = f'sms_captcha_{telephone}'
+    correct_captcha = redis.get(key_name)
+    if not correct_captcha or str(captcha) != correct_captcha:
+        raise BizHTTPException(*RespError.INCORRECT_CAPTCHA)
+    redis.delete(key_name)
+    return captcha
 
 
 def get_class_by_code(
@@ -42,7 +50,7 @@ def get_class_by_code(
     """
     校验班级码是否有效，查询数据该班级码对应的班级是否存在
     """
-    class_ = crud.class_.class_exists(db, id_=class_code)
+    class_ = crud.class_.class_exists(db, class_id=class_code)
     if not class_:
         raise BizHTTPException(*RespError.INVALID_PARAMETER)
     return class_
@@ -72,7 +80,7 @@ def get_family_relation(
     return family_relation
 
 
-@router.post('/teachers/applications', summary='提交教师端入班申请')
+@router.post('/teachers/join_request', summary='提交教师端入班申请')
 def teacher_apply_into_class(
     db: Session = Depends(deps.get_db),
     token: schemas.TokenPayload = Depends(deps.get_activated),
@@ -80,13 +88,14 @@ def teacher_apply_into_class(
     subject_id: int = Depends(get_subject),
     telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
     class_: Row = Depends(get_class_by_code),
-    _: int = Depends(validate_verify_code),
-) -> Any:
+    _: int = Depends(validate_sms_captcha),
+) -> JSONResponse:
     """
     提交教师端入班申请
     """
+    user_id = int(token.sub)
     # 检查是否已在班
-    is_exists = crud.class_member.is_teacher_in_class(db, token.sub)
+    is_exists = crud.class_member.is_teacher_in_class(db, user_id)
     if is_exists:
         raise BizHTTPException(
             RespError.DUPLICATE_TEACHER.status_code,
@@ -97,7 +106,7 @@ def teacher_apply_into_class(
     if telephone == class_.contact:
         headteacher = ClassMember(
             class_id=class_.id,
-            user_id=token.sub,
+            user_id=user_id,
             name=name,
             member_role=DBConst.HEADTEACHER,
             subject_id=subject_id,
@@ -105,10 +114,10 @@ def teacher_apply_into_class(
         )
         headteacher = crud.class_member.create(db, obj_in=headteacher)
         if not token.user.current_member_id:
-            crud.user.update_current_member(db, token.sub, headteacher.id)
+            crud.user.update_current_member(db, user_id, headteacher.id)
         return schemas.Response()
     # 检查老师是否已提交申请
-    if crud.apply4class.teacher_apply_exists(db, token.sub, class_.id):
+    if crud.apply4class.teacher_apply_exists(db, user_id, class_.id):
         raise BizHTTPException(*RespError.DUPLICATE_APPLY)
     # 检查该科目是否已有任课老师
     teacher_exists = crud.class_member.subject_teacher_exists(
@@ -124,7 +133,7 @@ def teacher_apply_into_class(
     if not class_.need_audit:
         teacher = ClassMember(
             class_id=class_.id,
-            user_id=token.sub,
+            user_id=user_id,
             name=name,
             member_role=DBConst.TEACHER,
             subject_id=subject_id,
@@ -132,12 +141,12 @@ def teacher_apply_into_class(
         )
         teacher = crud.class_member.create(db, obj_in=teacher)
         if not token.user.current_member_id:
-            crud.user.update_current_member(db, token.sub, teacher.id)
+            crud.user.update_current_member(db, user_id, teacher.id)
         return schemas.Response()
     # 提交申请信息入库
     apply = Apply4Class(
         name=name,
-        user_id=token.sub,
+        user_id=user_id,
         class_id=class_.id,
         subject_id=subject_id,
         telephone=telephone,
@@ -146,7 +155,7 @@ def teacher_apply_into_class(
     return schemas.Response()
 
 
-@router.post('/students/applications', summary='提交学生端入班申请')
+@router.post('/students/join_request', summary='提交学生端入班申请')
 def student_apply_into_class(
     db: Session = Depends(deps.get_db),
     token: schemas.TokenPayload = Depends(deps.get_activated),
@@ -154,16 +163,17 @@ def student_apply_into_class(
     family_relation: str = Depends(get_family_relation),
     telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
     class_: Class = Depends(get_class_by_code),
-    _: int = Depends(validate_verify_code),
-) -> Any:
+    _: int = Depends(validate_sms_captcha),
+) -> JSONResponse:
     """
     提交学生端入班申请
     """
+    user_id = int(token.sub)
     # 查询是否已在班
-    if crud.class_member.is_student_in_class(db, token.sub, name):
+    if crud.class_member.is_student_in_class(db, user_id, name):
         raise BizHTTPException(*RespError.DUPLICATE_MEMBER)
     # 查询同一学生是否已提交申请
-    apply_lst = crud.apply4class.student_apply_exists(db, token.sub, class_.id)
+    apply_lst = crud.apply4class.student_apply_exists(db, user_id, class_.id)
     if [x for x in apply_lst if x.name == name]:
         raise BizHTTPException(*RespError.DUPLICATE_APPLY)
     # 查询在同一班级提交申请的数量
@@ -173,7 +183,7 @@ def student_apply_into_class(
     if not class_.need_audit:
         student = ClassMember(
             class_id=class_.id,
-            user_id=token.sub,
+            user_id=user_id,
             name=name,
             member_role=DBConst.STUDENT,
             family_relation=family_relation,
@@ -181,12 +191,12 @@ def student_apply_into_class(
         )
         student = crud.class_member.create(student)
         if not token.user.current_member_id:
-            crud.user.update_current_member(db, token.sub, student.id)
+            crud.user.update_current_member(db, user_id, student.id)
         return schemas.Response()
     # 提交入班申请
     apply = Apply4Class(
         name=name,
-        user_id=token.sub,
+        user_id=user_id,
         class_id=class_.id,
         family_relation=family_relation,
         telephone=telephone,
@@ -195,11 +205,11 @@ def student_apply_into_class(
     return schemas.Response()
 
 
-@router.get('/class_codes/', summary='根据班主任的电话号码获取其班级的班级码')
+@router.post('/class_codes/query', summary='根据班主任的电话号码获取其班级的班级码')
 def get_class_id_by_telephone(
     db: Session = Depends(deps.get_db),
     _: schemas.TokenPayload = Depends(deps.get_activated),
-    telephone: str = Query(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
 ) -> Any:
     """
     根据班主任的电话号码获取其班级的班级码

@@ -1,8 +1,9 @@
-version: "3.3"
+version: "3.5"
 services:
 
   proxy:
     image: traefik:v2.2
+    container_name: proxy
     networks:
       - ${TRAEFIK_PUBLIC_NETWORK?Variable not set}
       - default
@@ -77,6 +78,7 @@ services:
 
   db:
     image: postgres:12
+    container_name: db
     volumes:
       - app-db-data:/var/lib/postgresql/data/pgdata
     env_file:
@@ -90,8 +92,15 @@ services:
     ports:
       - "5432:5432"
 
+  queue:
+    image: redis:6.2.5
+    container_name: queue
+    ports:
+      - "6379:6379"
+
   pgadmin:
     image: dpage/pgadmin4
+    container_name: pgadmin
     networks:
       - ${TRAEFIK_PUBLIC_NETWORK?Variable not set}
       - default
@@ -115,7 +124,10 @@ services:
 
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    container_name: backend
     depends_on:
+      - db
+    links:
       - db
     env_file:
       - .env
@@ -126,7 +138,8 @@ services:
       - SMTP_HOST=${SMTP_HOST}
     build:
       context: ./backend
-      dockerfile: backend.dockerfile
+      dockerfile: Dockerfile
+      target: BACKEND
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
     ports:
@@ -137,6 +150,29 @@ services:
         - traefik.constraint-label-stack=${TRAEFIK_TAG?Variable not set}
         - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`)
         - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=80
+
+  celeryworker:
+    image: '${DOCKER_IMAGE_CELERYWORKER?Variable not set}:${TAG-latest}'
+    container_name: celeryworker
+    depends_on:
+      - db
+      - queue
+    links:
+      - db
+      - queue
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME=${DOMAIN?Variable not set}
+      - SERVER_HOST=https://${DOMAIN?Variable not set}
+      # Allow explicit env var override for tests
+      - SMTP_HOST=${SMTP_HOST?Variable not set}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: CELERYWORKER
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
 
 
 volumes:

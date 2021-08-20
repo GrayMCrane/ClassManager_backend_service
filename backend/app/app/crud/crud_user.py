@@ -46,9 +46,9 @@ class CRUDUser(CRUDBase[User, UserCreate, User]):
         更新用户当前所在班级
         """
         res = (
-            db.query(self.model.id)
+            db.query(self.model)
             .filter(User.id == user_id)
-            .update({'current_member_id': member_id})
+            .update({User.current_member_id: member_id})
         )
         db.commit()
         return res

@@ -18,6 +18,7 @@ def insert_seed_data(op) -> None:
     insert_region(op)
     insert_cp_field_mapping(op)
     insert_family_relation_config(op)
+    insert_subjects(op)
     op.execute("select setval('class_id_seq', 1001, false);")
 
 
@@ -150,3 +151,12 @@ def insert_family_relation_config(op):
     ]
     op.bulk_insert(sys_config_table, family_relation_config)
 
+
+# 插入 学科 预置数据
+def insert_subjects(op):
+    subject_table = table(
+        'subject',
+        column('name')
+    )
+    subjects = [{'name': '语文'}, {'name': '数学'}, {'name': '英语'}]
+    op.bulk_insert(subject_table, subjects)

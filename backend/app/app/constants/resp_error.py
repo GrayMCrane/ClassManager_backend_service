@@ -12,12 +12,11 @@ class Response(object):
     该类的实例是不可变对象
     支持 星号解包 的方式传递实例变量
 
-    Example
-    -------
-    from app.exceptions import BizHTTPException
+    Example:
+        from app.exceptions import BizHTTPException
 
-    response = Response(status_code=404, detail='Not found', desc='找不到资源')
-    raise BizHTTPException(*response)
+        response = Response(status_code=404, detail='Not found', desc='找不到资源')
+        raise BizHTTPException(*response)
     """
     def __init__(self, status_code: int, statement: str, message: str) -> None:
         super().__setattr__('status_code', status_code)
@@ -37,6 +36,7 @@ class RespError(Const):
     """
     SERVER_TOO_BUSY = Response(500, 'Server is too busy', '系统繁忙')
     INVALID_CODE = Response(400, 'Invalid code', '无效的code')
+    USED_CODE = Response(403, 'Used code', '已使用过的code')
     USER_REQUESTS_TOO_FREQUENTLY = Response(
         403, 'User requests too frequently', '用户请求过于频繁'
     )
@@ -65,3 +65,4 @@ class RespError(Const):
     TOO_MANY_APPLY = Response(
         400, 'Too many apply in class', '同一班级申请数量超过上限'
     )
+    INCORRECT_CAPTCHA = Response(400, 'Incorrect captcha', '验证码错误')
