@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
-from app.api.class_manager.api import api_router
+from app.api.router import api_router
 from app.core.config import settings
 from app.core.middleware import log_requests
 from app.exceptions import (
@@ -22,7 +22,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     root_path=settings.BASE_DIR,
     description='ClassManager backend service',
-    openapi_url=f"/api{settings.CLASS_MANAGER_STR}/openapi.json"
+    openapi_url=f"{settings.CLASS_MANAGER_STR}/openapi.json"
 )
 
 # 跨域配置
@@ -55,8 +55,3 @@ app.add_exception_handler(Exception, broad_exception_handler)
 app.add_middleware(BaseHTTPMiddleware, dispatch=log_requests)
 # 初始化日志
 init_logger()
-
-
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run('main:app', host='0.0.0.0', reload=True)  # local test

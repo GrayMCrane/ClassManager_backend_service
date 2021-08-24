@@ -9,7 +9,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Form, Path, Query
+from fastapi import APIRouter, Depends, Body, Path, Query
 from fastapi.responses import JSONResponse
 from redis import Redis
 from sqlalchemy.engine import Row
@@ -28,9 +28,9 @@ TELEPHONE_REGEX = r'^1[358]\d{9}$|^147\d{8}$|^179\d{8}$'
 
 
 def validate_sms_captcha(
-    captcha: int = Form(..., description='验证码'),
+    captcha: int = Body(..., description='验证码'),
     redis: Redis = Depends(deps.get_redis),
-    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
 ) -> int:
     """
     校验短信验证码
@@ -45,7 +45,7 @@ def validate_sms_captcha(
 
 def get_class_by_code(
     db: Session = Depends(deps.get_db),
-    class_code: int = Form(..., description='班级码')
+    class_code: int = Body(..., description='班级码')
 ) -> Row:
     """
     校验班级码是否有效，查询数据该班级码对应的班级是否存在
@@ -58,7 +58,7 @@ def get_class_by_code(
 
 def get_subject(
     db: Session = Depends(deps.get_db),
-    subject_id: int = Form(..., description='任教科目')
+    subject_id: int = Body(..., description='任教科目')
 ):
     """
     校验学科是否存在
@@ -70,7 +70,7 @@ def get_subject(
 
 def get_family_relation(
     db: Session = Depends(deps.get_db),
-    family_relation: str = Form(..., description='亲属关系'),
+    family_relation: str = Body(..., description='亲属关系'),
 ) -> str:
     """
     校验亲属关系是否存在
@@ -84,9 +84,9 @@ def get_family_relation(
 def teacher_apply_into_class(
     db: Session = Depends(deps.get_db),
     token: schemas.TokenPayload = Depends(deps.get_activated),
-    name: str = Form(..., description='姓名'),
+    name: str = Body(..., description='姓名'),
     subject_id: int = Depends(get_subject),
-    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
     class_: Row = Depends(get_class_by_code),
     _: int = Depends(validate_sms_captcha),
 ) -> JSONResponse:
@@ -159,9 +159,9 @@ def teacher_apply_into_class(
 def student_apply_into_class(
     db: Session = Depends(deps.get_db),
     token: schemas.TokenPayload = Depends(deps.get_activated),
-    name: str = Form(..., description='姓名'),
+    name: str = Body(..., description='姓名'),
     family_relation: str = Depends(get_family_relation),
-    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
     class_: Class = Depends(get_class_by_code),
     _: int = Depends(validate_sms_captcha),
 ) -> JSONResponse:
@@ -209,7 +209,7 @@ def student_apply_into_class(
 def get_class_id_by_telephone(
     db: Session = Depends(deps.get_db),
     _: schemas.TokenPayload = Depends(deps.get_activated),
-    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
 ) -> Any:
     """
     根据班主任的电话号码获取其班级的班级码
@@ -217,14 +217,25 @@ def get_class_id_by_telephone(
     return crud.class_.get_class_id_by_telephone(db, telephone)
 
 
-@router.get('/{class_id}/family_members/', summary='获取学生在该班的所有亲属信息')
+@router.get('/{class_code}/family_members/', summary='获取学生在该班的所有亲属信息')
 def get_family_members(
     db: Session = Depends(deps.get_db),
     _: schemas.TokenPayload = Depends(deps.get_activated),
-    class_id: int = Path(..., description='班级码'),
+    class_code: int = Path(..., description='班级码'),
     name: str = Query(..., description='学生姓名'),
 ) -> Any:
     """
     根据班级码及学生姓名获取该学生在该班级的亲属的信息
     """
-    return crud.class_member.get_family_members(db, class_id, name)
+    return crud.class_member.get_family_members(db, class_code, name)
+
+
+@router.get('/{class_code}/', summary='获取邀请入班的小程序码')
+def get_family_members(
+    token: schemas.TokenPayload = Depends(deps.get_activated),
+    redis: Redis = Depends(deps.get_redis),
+) -> Any:
+    """
+    获取邀请入班的小程序码
+    """
+    ...

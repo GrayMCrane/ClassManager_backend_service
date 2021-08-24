@@ -1,9 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.class_manager.endpoints import (
-    classes, configurations, login, pages, users
-)
-
+from app.api.class_manager import pages, configurations, users, login, classes
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])

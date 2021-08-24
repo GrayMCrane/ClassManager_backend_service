@@ -14,6 +14,7 @@ from typing import Dict
 import requests
 from fastapi import APIRouter, Depends, Path
 from loguru import logger
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
@@ -50,6 +51,7 @@ def get_access_token(
     若数据库 user 表无用户数据则新建用户数据
     用户的 id、openid、session_key 将被写入Token，其中 openid 和 session_key 写入前会进行加密
     """
+    error = None
     params = {
         'appid': settings.MINI_PROGRAM_APP_ID,
         'secret': settings.MINI_PROGRAM_APP_SECRET,
@@ -59,8 +61,11 @@ def get_access_token(
 
     # 请求微信 auth.code2session 接口
     resp = requests.get(settings.CODE2SESSION_URL, params=params)
-    resp_msg = Code2SessionMsg(**json.loads(resp.text))
-    if not resp_msg.openid or not resp_msg.session_key:
+    try:
+        resp_msg = Code2SessionMsg(**json.loads(resp.text))
+    except (ValidationError, json.JSONDecodeError):
+        error = resp_msg = 1
+    if error or not resp_msg.openid or not resp_msg.session_key:
         logger.error(f'rid={request_id} code to session failed,'
                      f'status code={resp.status_code} message={resp.text}')
         error = CODE2SESSION_ERROR_MAP.get(resp_msg.errcode,
