@@ -1,5 +1,5 @@
 from .crud_class import apply4class, class_, class_member
-from .crud_page import homepage_menu, slideshow
+from .crud_page import homepage_menu, entrance_page
 from .crud_school import school
 from .crud_sys import region, sys_config
 from .crud_subject import subject

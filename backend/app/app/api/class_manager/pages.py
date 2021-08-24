@@ -18,22 +18,31 @@ from app.api import deps
 
 router = APIRouter()
 
-SLIDESHOW_NUMBER_LIMIT = 10
+ENTRANCE_PAGE_LIMIT = 10
 HOMEPAGE_MENU_NUMBER_LIMIT = 8
 
 
-@router.get('/slideshows', summary='获取轮播图', description='获取轮播图')
-def get_slideshows(
+@router.get('/startup_pages', summary='获取启动页图片', description='获取启动页图片')
+def get_startup_page(
     db: Session = Depends(deps.get_db),
-    limit: int = Query(SLIDESHOW_NUMBER_LIMIT, description='数量'),
 ) -> Any:
     """
-    获取启用中的轮播图，图片数量有限制
+    获取启用中的启动页图片路径
     """
-    if not limit or limit <= 0 or limit > SLIDESHOW_NUMBER_LIMIT:
-        limit = SLIDESHOW_NUMBER_LIMIT
-    slideshows = crud.slideshow.get_activated(db, limit=limit)
-    return slideshows
+    return crud.entrance_page.get_startup_activated(db)
+
+
+@router.get('/guidance_pages', summary='获取引导页图片', description='获取引导页图片')
+def get_guidance_pages(
+    db: Session = Depends(deps.get_db),
+    limit: int = Query(ENTRANCE_PAGE_LIMIT, description='数量'),
+) -> Any:
+    """
+    获取启用中的启动页图片，图片数量有限制
+    """
+    if not limit or limit <= 0 or limit > ENTRANCE_PAGE_LIMIT:
+        limit = ENTRANCE_PAGE_LIMIT
+    return crud.entrance_page.get_guidance_activated(db, limit=limit)
 
 
 @router.get('/homepage_menus', summary='获取首页菜单', description='获取首页菜单')

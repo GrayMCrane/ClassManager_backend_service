@@ -12,7 +12,7 @@ ORM模型
 from app.models.base import Base                                # noqa
 from app.models.classes import Apply4Class, Class, ClassMember  # noqa
 from app.models.feedback import Feedback, FeedbackImage         # noqa
-from app.models.page import HomepageMenu, Slideshow             # noqa
+from app.models.page import HomepageMenu, EntrancePage           # noqa
 from app.models.school import School                            # noqa
 from app.models.subject import Subject                          # noqa
 from app.models.system import Region, SysConfig                 # noqa

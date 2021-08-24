@@ -23,13 +23,11 @@ class DBConst(Const):
     CITY = '2'      # 地级行政区
     AREA = '3'      # 县级行政区
 
-    # -------------- 轮播图表 slideshow 相关 -------------
-    SLIDESHOW_ACTIVATED = '1'    # 轮播图已启用
-    SLIDESHOW_INACTIVATED = '0'  # 轮播图已停用
-
-    # ------------ 首页菜单 homepage_menu 相关 -----------
-    HOMEPAGE_MENU_ACTIVATED = '1'    # 首页菜单项已启用
-    HOMEPAGE_MENU_INACTIVATED = '0'  # 首页菜单项已停用
+    # ----- 页面图片 entrance_page homepage_menu 相关 ----
+    PIC_ACTIVATED = '1'    # 图片已启用
+    PIC_INACTIVATED = '0'  # 图片已停用
+    STARTUP = '1'   # 启动页图片
+    GUIDANCE = '2'  # 引导页图片
 
     # ----------- 班级成员表 class_member 相关 -----------
     HEADTEACHER = '1'  # 班级成员身份: 班主任

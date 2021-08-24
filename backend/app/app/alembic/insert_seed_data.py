@@ -160,3 +160,17 @@ def insert_subjects(op):
     )
     subjects = [{'name': '语文'}, {'name': '数学'}, {'name': '英语'}]
     op.bulk_insert(subject_table, subjects)
+
+
+entrance_page_table = table(
+    'entrance_page',
+    column('src'), column('target'), column('type')
+)
+
+
+# 插入 启动页及引导页 图片
+def insert_entrance_pages(op):
+    startup_pages = [
+        {'src': '/files/pics/startup_v1.svg', 'target': None, 'type': '1'}
+    ]
+    op.bulk_insert(entrance_page_table, startup_pages)

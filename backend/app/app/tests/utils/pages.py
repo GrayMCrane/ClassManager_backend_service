@@ -18,7 +18,7 @@ def create_random_slideshow(db: Session) -> Slideshow:
     name = random_lower_string()
 
     slideshow = Slideshow(src=src, desc=desc, target=target, herf=herf, name=name)  # noqa
-    crud.slideshow.create(db, obj_in=slideshow)
+    crud.entrance_page.create(db, obj_in=slideshow)
     return slideshow
 
 

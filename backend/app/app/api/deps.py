@@ -1,7 +1,7 @@
 from typing import Generator
 
 from fastapi import Depends, Request
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer
 from jose import jwt
 from pydantic import ValidationError
 from redis import Redis
@@ -15,11 +15,7 @@ from app.db.session import SessionLocal
 from app.db.redis import redis
 from app.exceptions import BizHTTPException
 
-
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.CLASS_MANAGER_STR}/access_tokens",
-    auto_error=False,
-)
+reusable_oauth2 = HTTPBearer(auto_error=False)
 
 
 def get_request_id(request: Request) -> str:
@@ -58,7 +54,7 @@ def get_token(
         raise BizHTTPException(*RespError.FORBIDDEN)
     try:
         payload = jwt.decode(
-            token_str, settings.SECRET_KEY,
+            token_str.credentials, settings.SECRET_KEY,
             algorithms=[security.ALGORITHM], audience='ClassManager'
         )
         token = schemas.TokenPayload(**payload)
