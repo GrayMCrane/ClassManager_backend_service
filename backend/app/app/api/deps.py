@@ -31,7 +31,7 @@ def get_request_id(request: Request) -> str:
 
 def get_db() -> Generator:
     """
-    获取数据库连接，支持协程异步
+    获取数据库连接
     """
     db = None
     try:
@@ -42,6 +42,9 @@ def get_db() -> Generator:
 
 
 def get_redis() -> Redis:
+    """
+    获取Redis连接
+    """
     return redis
 
 

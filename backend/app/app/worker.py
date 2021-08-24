@@ -1,6 +1,11 @@
+import json
 import traceback
+from typing import Any
 
+import requests
+from pydantic import ValidationError
 from raven import Client
+from celery.signals import beat_init
 from celery.utils.log import get_task_logger
 from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import \
@@ -11,8 +16,10 @@ from tencentcloud.sms.v20210111 import sms_client, models
 from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 
+from app import schemas
 from app.core.celery_app import celery_app
 from app.core.config import settings
+from app.db.redis import redis
 
 
 client_sentry = Client(settings.SENTRY_DSN)
@@ -21,11 +28,14 @@ logger = get_task_logger(__name__)
 
 
 @celery_app.task()
-def send_sms_captcha(telephone: str, captcha: int, expire: int):
+def send_sms_captcha(
+    request_id: str, telephone: str, captcha: int, expire: int
+) -> None:
     """
     发送手机短信验证码
 
     Parameters:
+        request_id : rid
         telephone : 手机号
         captcha : 验证码
         expire : 过期时间，单位：分钟
@@ -93,6 +103,54 @@ def send_sms_captcha(telephone: str, captcha: int, expire: int):
         # 输出json格式的字符串回包
         resp_text = resp.to_json_string(indent=2)
         if 'send success' not in resp_text:
-            logger.error(resp_text)
+            logger.error(f'rid={request_id} send sms captcha failed,'
+                         f'message={resp_text}')
     except TencentCloudSDKException:
-        logger.error(traceback.format_exc())
+        logger.error(f'rid={request_id} send sms captcha failed,'
+                     f'unexpected exception:\n{traceback.format_exc()}')
+
+
+@celery_app.task()
+def get_wx_mini_program_access_token() -> Any:
+    """
+    请求微信小程序平台 access_token
+    """
+    error = None
+    params = {
+        'grant_type': 'client_credential',
+        'appid': settings.MINI_PROGRAM_APP_ID,
+        'secret': settings.MINI_PROGRAM_APP_SECRET,
+    }
+    resp = requests.get(settings.WX_ACCESS_TOKEN_URL, params=params)
+    try:
+        resp_msg = schemas.WXAccessTokenMsg(**json.loads(resp.text))
+    except (ValidationError, json.JSONDecodeError):
+        error = resp_msg = 1
+    if error or not resp_msg.access_token or not resp_msg.expires_in:
+        logger.error(
+            f'get WX mini program access token failed,'
+            f'status code={resp.status_code} message={resp.text}'
+        )
+        return
+    if resp_msg.expires_in != settings.WX_ACCESS_TOKEN_EXPIRES:
+        logger.warning(f'WX mini program access token expires may changed,'
+                       f'expires_in={resp_msg.expires_in}')
+    redis.set('wx_access_token', resp_msg.access_token)
+    return resp_msg.access_token
+
+
+@celery_app.on_after_configure.connect
+def set_timing_task(sender, **_):
+    """
+    设置celery定时任务
+    """
+    period = settings.WX_ACCESS_TOKEN_EXPIRES
+    period -= settings.WX_ACCESS_TOKEN_UPDATE_OFFSET
+    sender.add_periodic_task(period,
+                             get_wx_mini_program_access_token.s(),
+                             name='get_wx_mini_program_access_token')
+
+
+@beat_init.connect
+def when_beat_init(*_, **__):
+    get_wx_mini_program_access_token.delay()

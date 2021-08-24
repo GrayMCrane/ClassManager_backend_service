@@ -9,7 +9,7 @@
 
 import secrets
 
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Body
 from fastapi.responses import JSONResponse
 from redis import Redis
 from sqlalchemy.orm import Session
@@ -42,9 +42,10 @@ def get_user_basic_info(
 
 @router.post('/telephone/sms_captcha/request', summary='请求手机短信验证码')
 def send_sms_captcha(
+    request_id: int = Depends(deps.get_request_id),
     _: schemas.TokenPayload = Depends(deps.get_activated),
     redis: Redis = Depends(deps.get_redis),
-    telephone: str = Form(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
 ) -> JSONResponse:
     """
     通过短信发送手机号验证码
@@ -59,7 +60,12 @@ def send_sms_captcha(
     # 向celery推送短信发送任务
     celery_app.send_task(
         'worker.send_sms_captcha',
-        args=[telephone, captcha, settings.SMS_CAPTCHA_EXPIRE_SECONDS // 60]
+        args=[
+            request_id,
+            telephone,
+            captcha,
+            settings.SMS_CAPTCHA_EXPIRE_SECONDS // 60,
+        ]
     )
     # 存储 send_flag 和 验证码 到Redis
     redis.setex(f'send_flag_{telephone}', settings.SEND_SMS_INTERVAL_SECONDS, 1)
