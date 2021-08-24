@@ -54,7 +54,7 @@ def get_token(
         raise BizHTTPException(*RespError.FORBIDDEN)
     try:
         payload = jwt.decode(
-            token_str, settings.SECRET_KEY,
+            token_str.credentials, settings.SECRET_KEY,
             algorithms=[security.ALGORITHM], audience='ClassManager'
         )
         token = schemas.TokenPayload(**payload)
