@@ -1,7 +1,8 @@
 from typing import Generator
 
 from fastapi import Depends, Request
-from fastapi.security import OAuth2PasswordBearer, HTTPBearer
+from fastapi.security import HTTPBearer
+from fastapi.security.http import HTTPAuthorizationCredentials
 from jose import jwt
 from pydantic import ValidationError
 from redis import Redis
@@ -16,10 +17,6 @@ from app.db.redis import redis
 from app.exceptions import BizHTTPException
 
 
-# reusable_oauth2 = OAuth2PasswordBearer(
-#     tokenUrl=f"{settings.CLASS_MANAGER_STR}/access_tokens",
-#     auto_error=False,
-# )
 reusable_oauth2 = HTTPBearer(auto_error=False)
 
 
@@ -50,16 +47,17 @@ def get_redis() -> Redis:
 
 
 def get_token(
-    db: Session = Depends(get_db), token_str: str = Depends(reusable_oauth2)
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2)
 ) -> schemas.TokenPayload:
     """
     校验Token，校验Token用户存在数据库中，返回Token payload
     """
-    if not token_str:
+    if not credentials:
         raise BizHTTPException(*RespError.FORBIDDEN)
     try:
         payload = jwt.decode(
-            token_str, settings.SECRET_KEY,
+            credentials.credentials, settings.SECRET_KEY,
             algorithms=[security.ALGORITHM], audience='ClassManager'
         )
         token = schemas.TokenPayload(**payload)
