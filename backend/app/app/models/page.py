@@ -28,16 +28,18 @@ class HomepageMenu(Base):
                     comment='状态: 0-停用 1-启用')
 
 
-class Slideshow(Base):
+class EntrancePage(Base):
     """
-    轮播图
-    数据表: slideshow - 首次进入小程序的轮播图的信息
+    启动页图片
+    数据表: entrance_page - 首次进入小程序的启动页图片的信息
     """
+    __tablename__ = 'entrance_page'  # noqa
+
     id = Column(Integer, primary_key=True, autoincrement=True, comment='id，主键')
     src = Column(String, nullable=False, comment='图片链接')
     desc = Column(String, comment='图片描述')
     target = Column(String, comment='页面路由')
-    herf = Column(String, comment='跳转外链')
-    name = Column(String, comment='名字')
+    type = Column(String(2), nullable=False, comment='图片类型: '
+                                                     '1-启动页图片 2-引导页图片')
     status = Column(String(2), nullable=False, server_default='1',
                     comment='状态: 0-停用 1-启用')
