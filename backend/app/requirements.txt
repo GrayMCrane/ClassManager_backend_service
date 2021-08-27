@@ -46,6 +46,7 @@ pluggy==0.13.1
 premailer==3.10.0
 prompt-toolkit==3.0.19
 psycopg2==2.9
+psycopg2-binary==2.9
 py==1.10.0
 pyasn1==0.4.8
 pycodestyle==2.7.0
