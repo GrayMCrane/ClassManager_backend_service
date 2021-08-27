@@ -6,11 +6,13 @@
 """
 路径函数 - 班级相关
 """
-
+import base64
 from typing import Any
 
+import requests
 from fastapi import APIRouter, Depends, Body, Path, Query
 from fastapi.responses import JSONResponse
+from loguru import logger
 from redis import Redis
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session
@@ -18,6 +20,7 @@ from sqlalchemy.orm import Session
 from app import crud, schemas
 from app.api import deps
 from app.constants import DBConst, RespError
+from app.core.config import settings
 from app.exceptions import BizHTTPException
 from app.models import Apply4Class, Class, ClassMember
 
@@ -230,12 +233,62 @@ def get_family_members(
     return crud.class_member.get_family_members(db, class_code, name)
 
 
-@router.get('/{class_code}/', summary='获取邀请入班的小程序码')
-def get_family_members(
-    token: schemas.TokenPayload = Depends(deps.get_activated),
-    redis: Redis = Depends(deps.get_redis),
-) -> Any:
+@router.get('/invitation/links', summary='生成邀请入班链接')
+def get_invitation_links(
+    db: Session = Depends(deps.get_db),
+    token: schemas.TokenPayload = Depends(deps.get_teacher),
+) -> JSONResponse:
     """
-    获取邀请入班的小程序码
+    生成邀请入班链接
     """
     ...
+
+
+@router.get('/invitation/wxacode', summary='生成邀请入班的小程序码')
+def get_invitation_wxacode(
+    token: schemas.TokenPayload = Depends(deps.get_teacher),
+    redis: Redis = Depends(deps.get_redis),
+    page: str = Query(None, description='跳转页面连接'),
+) -> JSONResponse:
+    """
+    生成邀请入班的小程序码
+    """
+    cur_member_id = token.user.current_member_id
+    # 请求微信小程序码
+    wx_access_token = redis.get('wx_access_token')
+    json_data = {'scene': f'id={cur_member_id}', 'page': page}
+    resp = requests.post(settings.WXACODE_GET_UNLIMITED_URL, json=json_data,
+                         params={'access_token': wx_access_token}, stream=True)
+    # 通过响应头判断响应结果
+    content_type = resp.headers.get('Content-Type')
+    if not content_type or 'image' not in content_type:
+        logger.error(f'Generate wxacode failed,content_type={content_type},'
+                     f'message={resp.text}')
+        raise BizHTTPException(*RespError.GEN_WXACODE_FAILED)
+    return schemas.Response(data=base64.b64encode(resp.content).decode())
+
+
+@router.get('/invitor/{member_id}/invitation',
+            summary='根据邀请人id查询邀请入班信息')
+def get_invitation_info(
+    db: Session = Depends(deps.get_db),
+    _: schemas.TokenPayload = Depends(deps.get_activated),
+    member_id: str = Path(..., description='邀请人id'),
+) -> JSONResponse:
+    """
+    根据邀请人id查询邀请入班信息
+    """
+    # 邀请人所在班的 班级码、用户在班角色、班级所属学校、邀请人名称
+    cur_member = crud.class_member.get_current_class_member(db, member_id)
+    if not cur_member:
+        raise BizHTTPException(*RespError.INVALID_INVITATION)
+    if cur_member.member_role not in (DBConst.HEADTEACHER, DBConst.TEACHER):
+        raise BizHTTPException(*RespError.AUTHORIZATION_DENIED)
+    invitation_data = {
+        'class_code': cur_member.class_id,
+        'invitor_name': cur_member.name,
+        'school_name': cur_member.school_name,
+        'grade': cur_member.grade,
+        'class': cur_member['class'],
+    }
+    return schemas.Response(data=invitation_data)

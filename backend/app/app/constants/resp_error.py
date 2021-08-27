@@ -66,3 +66,6 @@ class RespError(Const):
         400, 'Too many apply in class', '同一班级申请数量超过上限'
     )
     INCORRECT_CAPTCHA = Response(400, 'Incorrect captcha', '验证码错误')
+    AUTHORIZATION_DENIED = Response(403, 'Authorization denied', '权限不足')
+    INVALID_INVITATION = Response(400, 'Invalid invitation info', '无效的邀请信息')
+    GEN_WXACODE_FAILED = Response(500, 'Generate wxacode failed', '小程序码生成失败')
