@@ -46,7 +46,8 @@ def send_sms_captcha(
     request_id: int = Depends(deps.get_request_id),
     _: schemas.TokenPayload = Depends(deps.get_activated),
     redis: Redis = Depends(deps.get_redis),
-    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX,
+                          embed=True, description='电话号码'),
 ) -> JSONResponse:
     """
     通过短信发送手机号验证码
