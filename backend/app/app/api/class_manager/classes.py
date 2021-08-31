@@ -6,13 +6,16 @@
 """
 路径函数 - 班级相关
 """
+
 import base64
+import json
 from typing import Any
 
 import requests
 from fastapi import APIRouter, Depends, Body, Path, Query
 from fastapi.responses import JSONResponse
 from loguru import logger
+from pydantic import ValidationError
 from redis import Redis
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session
@@ -48,7 +51,7 @@ def validate_sms_captcha(
 
 def get_class_by_code(
     db: Session = Depends(deps.get_db),
-    class_code: int = Body(..., description='班级码')
+    class_code: int = Body(..., embed=True, description='班级码'),
 ) -> Row:
     """
     校验班级码是否有效，查询数据该班级码对应的班级是否存在
@@ -61,7 +64,7 @@ def get_class_by_code(
 
 def get_subject(
     db: Session = Depends(deps.get_db),
-    subject_id: int = Body(..., description='任教科目')
+    subject_id: int = Body(..., embed=True, description='任教科目'),
 ):
     """
     校验学科是否存在
@@ -73,7 +76,7 @@ def get_subject(
 
 def get_family_relation(
     db: Session = Depends(deps.get_db),
-    family_relation: str = Body(..., description='亲属关系'),
+    family_relation: str = Body(..., embed=True, description='亲属关系'),
 ) -> str:
     """
     校验亲属关系是否存在
@@ -212,7 +215,8 @@ def student_apply_into_class(
 def get_class_id_by_telephone(
     db: Session = Depends(deps.get_db),
     _: schemas.TokenPayload = Depends(deps.get_activated),
-    telephone: str = Body(..., regex=TELEPHONE_REGEX, description='电话号码'),
+    telephone: str = Body(..., regex=TELEPHONE_REGEX,
+                          embed=True, description='电话号码'),
 ) -> Any:
     """
     根据班主任的电话号码获取其班级的班级码
@@ -235,13 +239,33 @@ def get_family_members(
 
 @router.get('/invitation/links', summary='生成邀请入班链接')
 def get_invitation_links(
-    db: Session = Depends(deps.get_db),
+    request_id: str = Depends(deps.get_request_id),
     token: schemas.TokenPayload = Depends(deps.get_teacher),
+    redis: Redis = Depends(deps.get_redis),
+    path: str = Query(None, description='跳转页面链接'),
 ) -> JSONResponse:
     """
     生成邀请入班链接
     """
-    ...
+    error = None
+    cur_member_id = token.user.current_member_id
+    # 请求微信小程序链接
+    wx_access_token = redis.get('wx_access_token')
+    json_data = {
+        'path': path, 'query': f'id={cur_member_id}', 'is_expire': True,
+        'expire_type': 1, 'expire_interval': 7
+    }
+    resp = requests.post(settings.WX_GET_URL_LINK_URL, json=json_data,
+                         params={'access_token': wx_access_token})
+    try:
+        resp_msg = schemas.WXUrlLinkMsg(**json.loads(resp.text))
+    except (ValidationError, json.JSONDecodeError):
+        error = resp_msg = 1
+    if error or not resp_msg.url_link:
+        logger.error(f'rid={request_id} get wx url link failed,'
+                     f'status code={resp.status_code} message={resp.text}')
+        raise BizHTTPException(*RespError.GEN_WX_URL_LINK_FAILED)
+    return schemas.Response(data=resp_msg.url_link)
 
 
 @router.get('/invitation/wxacode', summary='生成邀请入班的小程序码')
