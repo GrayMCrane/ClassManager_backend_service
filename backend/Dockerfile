@@ -14,6 +14,7 @@ RUN apk add --no-cache --virtual .build-deps gcc libc-dev g++ make py3-numpy py3
 RUN pip install --no-cache-dir "uvicorn[standard]" gunicorn -i https://pypi.douban.com/simple
 
 COPY ./scripts/ /
+#RUN chmod +x /start.sh && chmod +x /start-reload.sh
 RUN chmod +x /start.sh && chmod +x /start-reload.sh
 
 FROM base-py39-alpine310 AS backend
@@ -28,9 +29,18 @@ CMD ["/start.sh"]
 
 FROM base-py39-alpine310 AS celeryworker
 
-COPY ./app /app
+#COPY ./app /app
 
 RUN chmod +x /worker-start.sh
 ENV PYTHONPATH=/app
 
 CMD ["/worker-start.sh"]
+
+FROM base-py39-alpine310 AS celerybeat
+
+#COPY ./app /app
+
+RUN chmod +x /beat-start.sh
+ENV PYTHONPATH=/app
+
+CMD ["/beat-start.sh"]
