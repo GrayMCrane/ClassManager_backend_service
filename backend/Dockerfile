@@ -5,11 +5,10 @@ LABEL maintainer="Canpoint Primary Team<jiangshouming@canpoint.cn>"
 WORKDIR /app
 
 COPY /app/requirements.txt /app/
-RUN apk add --no-cache --virtual .build-deps gcc libc-dev g++ make py3-numpy py3-pandas postgresql-dev musl-dev libffi-dev openssl-dev libxml2 libxml2-dev libxslt libxslt-dev\
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
+    apk add --no-cache --virtual .build-deps gcc libc-dev g++ make py3-numpy py3-pandas py3-cffi py3-lxml py3-psycopg2 libpq postgresql-libs postgresql-dev musl-dev libffi-dev openssl-dev libxml2 libxml2-dev libxslt libxslt-dev\
     && pip install -U pip  \
-    && pip install --no-cache-dir -r requirements.txt -i https://pypi.douban.com/simple  \
-    && apk del .build-deps gcc libc-dev make g++ postgresql-dev musl-dev libffi-dev openssl-dev libxml2 libxml2-dev libxslt libxslt-dev
-
+    && pip install --no-cache-dir -r requirements.txt -i https://pypi.douban.com/simple
 
 RUN pip install --no-cache-dir "uvicorn[standard]" gunicorn -i https://pypi.douban.com/simple
 
