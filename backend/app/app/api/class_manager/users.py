@@ -61,13 +61,14 @@ def send_sms_captcha(
     captcha = secrets.randbelow(999999)
     # 向celery推送短信发送任务
     celery_app.send_task(
-        'worker.send_sms_captcha',
+        'send_sms_captcha',
         args=[
             request_id,
             telephone,
             captcha,
             settings.SMS_CAPTCHA_EXPIRE_SECONDS // 60,
-        ]
+        ],
+        queue='main-queue',
     )
     # 存储 send_flag 和 验证码 到Redis
     redis.setex(f'send_flag_{telephone}', settings.SEND_SMS_INTERVAL_SECONDS, 1)
