@@ -25,7 +25,7 @@ router = APIRouter()
 @router.get('/subjects', summary='查询学科配置')
 def get_subjects(
     db: Session = Depends(deps.get_db),
-    _: schemas.TokenPayload = Depends(deps.get_activated),
+    _: schemas.TokenPayload = Depends(deps.get_token),
 ) -> Any:
     """
     查询学科配置
@@ -36,7 +36,7 @@ def get_subjects(
 @router.get('/family_relations', summary='查询亲属关系配置')
 def get_family_relations(
     db: Session = Depends(deps.get_db),
-    _: schemas.TokenPayload = Depends(deps.get_activated),
+    _: schemas.TokenPayload = Depends(deps.get_token),
 ) -> Any:
     """
     查询亲属关系配置
