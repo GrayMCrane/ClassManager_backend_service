@@ -11,7 +11,7 @@ from typing import List
 
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import aliased, Session
-from sqlalchemy.sql import and_, func
+from sqlalchemy.sql import func
 
 from app.crud.base import CRUDBase
 from app.constants import DBConst
@@ -62,10 +62,8 @@ class CRUDSysConfig(CRUDBase[SysConfig, SysConfig, SysConfig]):
         return (
             db.query(func.count(self.model.id))
             .filter(
-                and_(
                     SysConfig.type_ == DBConst.FAMILY_RELATION,
                     SysConfig.key == family_relation,
-                )
             )
             .scalar()
         )
